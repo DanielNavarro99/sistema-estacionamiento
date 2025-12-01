@@ -42,6 +42,11 @@ INSERT INTO usuarios (nombre, email, password, rol) VALUES
 ('Administrador', 'admin@park.com', 'admin123', 'admin'),
 ('Jose Maria', 'jose@park.com', '123456', 'usuario');
 
+USE estacionamiento_db;
+
+-- Insertar el usuario de prueba con rol 'usuario'
+INSERT INTO usuarios (nombre, email, password, rol)
+VALUES ('Usuario Prueba', 'prueb323a2@fefe.com', '123', 'usuario');
 -- Insertamos las Tarifas iniciales
 INSERT INTO tarifas (tipo_vehiculo, costo_por_hora) VALUES 
 ('Automovil', 20.00),

@@ -40,24 +40,37 @@ $(document).ready(function() {
             method: 'POST',
             contentType: 'application/json',
             data: JSON.stringify(datos),
-            success: function(response) {
-                // Si el login es correcto:
-                if (response.success) {
-                    localStorage.setItem('usuario', JSON.stringify(response.usuario));
-                    
-                    Swal.fire({
-                        icon: 'success',
-                        title: '¡Bienvenido!',
-                        text: 'Ingresando al sistema...',
-                        timer: 1500,
-                        showConfirmButton: false
-                    }).then(() => {
-                        // AQUÍ CAMBIAS LA REDIRECCIÓN
-                        // Como tus compañeros harán lo demás, mándalo a una página temporal o dashboard
-                        window.location.href = 'paginaPrincipal.html'; 
-                    });
-                }
-            },
+            // ... parte superior del ajax ...
+success: function(response) {
+    if (response.success) {
+        // Guardamos los datos del usuario en el navegador
+        localStorage.setItem('usuario', JSON.stringify(response.usuario));
+        
+        // Alerta de éxito
+        Swal.fire({
+            icon: 'success',
+            title: '¡Bienvenido!',
+            text: 'Ingresando al sistema...',
+            timer: 1500,
+            showConfirmButton: false
+        }).then(() => {
+            
+            // --- AQUÍ ESTÁ LA LÓGICA DE REDIRECCIÓN ---
+            const rol = response.usuario.rol; // Obtenemos el rol que viene de la BD
+
+            if (rol === 'admin') {
+                // Si es Admin, va a su vista especial
+                window.location.href = 'VistaAdmin.html';
+            } else {
+                // Si es Usuario normal (prueba2), va a su vista de registro
+                window.location.href = 'vistaUsuarioRegistro.html';
+            }
+            // -------------------------------------------
+            
+        });
+    }
+},
+// ... parte del error ...
             error: function(xhr) {
                 // Si falla (contraseña mal):
                 btnLogin.prop('disabled', false);
