@@ -51,3 +51,8 @@ INSERT INTO tarifas (tipo_vehiculo, costo_por_hora) VALUES
 -- Insertamos un coche que ya está estacionado (para que veas datos en la tabla)
 INSERT INTO registros (placa, tipo_vehiculo, usuario_entrada_id) VALUES 
 ('ABC-123', 'Automovil', 2);
+-- fataban estos datos para el registro hay que agregarlos en la tabla usuarios
+ALTER TABLE usuarios 
+ADD COLUMN tipo_vehiculo VARCHAR(50),
+ADD COLUMN marca_vehiculo VARCHAR(50),
+ADD COLUMN placa VARCHAR(20);
