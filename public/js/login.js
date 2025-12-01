@@ -1,4 +1,6 @@
-// Función para mostrar/ocultar contraseña
+// js/login.js
+
+// Función para mostrar/ocultar contraseña (se mantiene igual)
 function togglePassword() {
     const input = document.getElementById('password');
     const icon = document.querySelector('.btn-toggle-password i');
@@ -34,51 +36,58 @@ $(document).ready(function() {
             password: $('#password').val()
         };
 
-        // Petición al Servidor
+        // Petición al Servidor (usando jQuery AJAX)
         $.ajax({
-            url: '/api/auth/login',
+            // Nota: Aquí estamos usando una URL relativa, el servidor Node la resolverá
+            url: '/api/auth/login', 
             method: 'POST',
             contentType: 'application/json',
             data: JSON.stringify(datos),
-            // ... parte superior del ajax ...
-success: function(response) {
-    if (response.success) {
-        // Guardamos los datos del usuario en el navegador
-        localStorage.setItem('usuario', JSON.stringify(response.usuario));
-        
-        // Alerta de éxito
-        Swal.fire({
-            icon: 'success',
-            title: '¡Bienvenido!',
-            text: 'Ingresando al sistema...',
-            timer: 1500,
-            showConfirmButton: false
-        }).then(() => {
             
-            // --- AQUÍ ESTÁ LA LÓGICA DE REDIRECCIÓN ---
-            const rol = response.usuario.rol; // Obtenemos el rol que viene de la BD
+            success: function(response) {
+                // Asumiendo que el servidor devuelve { message: 'Login exitoso', user: {...} } y status 200
+                
+                // 1. Guardamos los datos del usuario en el navegador (si aplica)
+                localStorage.setItem('usuario', JSON.stringify(response.user)); // Cambiado de response.usuario a response.user
+                
+                // 2. Alerta de éxito
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Bienvenido!',
+                    text: 'Ingresando al sistema...',
+                    timer: 1500,
+                    showConfirmButton: false
+                }).then(() => {
+                    
+                    // --- LÓGICA DE REDIRECCIÓN FINAL ---
+                    const rol = response.user.rol; // **CAMBIO CLAVE: Obtenemos el rol de response.user.rol**
 
-            if (rol === 'admin') {
-                // Si es Admin, va a su vista especial
-                window.location.href = 'VistaAdmin.html';
-            } else {
-                // Si es Usuario normal (prueba2), va a su vista de registro
-                window.location.href = 'vistaUsuarioRegistro.html';
-            }
-            // -------------------------------------------
-            
-        });
-    }
-},
-// ... parte del error ...
+                    if (rol === 'admin') {
+                        // Si es Admin, va a su vista especial
+                        window.location.href = 'VistaAdmin.html';
+                    } else {
+                        // Si es Usuario normal ('usuario'), va a la vista de Ticket/Entrada
+                        window.location.href = 'vistaUsuario2.html'; 
+                    }
+                    // ------------------------------------
+                });
+            },
             error: function(xhr) {
-                // Si falla (contraseña mal):
+                // Si falla (contraseña mal o error 500):
                 btnLogin.prop('disabled', false);
                 spinner.addClass('d-none');
                 
-                const msg = xhr.responseJSON ? xhr.responseJSON.message : 'Error al conectar con el servidor';
+                // Intentamos obtener el mensaje de error del JSON
+                const responseData = xhr.responseJSON || {};
+                const msg = responseData.error || 'Error al conectar con el servidor o credenciales incorrectas.';
+                
                 mensajeError.text(msg);
                 alertaError.removeClass('d-none');
+            },
+            // Aseguramos que el spinner se oculte incluso si hay un error
+            complete: function() {
+                btnLogin.prop('disabled', false);
+                spinner.addClass('d-none');
             }
         });
     });

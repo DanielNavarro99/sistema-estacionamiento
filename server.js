@@ -5,6 +5,8 @@ const db = require('./config/db');
 
 // Importamos las rutas de autenticación
 const authRoutes = require('./routes/autenticacionRoutes');
+// 👇 ¡LÍNEA NUEVA! Importamos las rutas de registros
+const registrosRoutes = require('./routes/registrosRoutes'); 
 
 const app = express();
 
@@ -18,6 +20,8 @@ app.use(express.static('public'));
 
 // --- 3. RUTAS DEL API ---
 app.use('/api/auth', authRoutes);
+// 👇 ¡LÍNEA NUEVA! Agregamos el middleware para el módulo de registros
+app.use('/api/registros', registrosRoutes);
 
 
 // --- 4. INICIO DEL SERVIDOR ---

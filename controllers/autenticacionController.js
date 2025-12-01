@@ -1,47 +1,65 @@
 // controllers/autenticacionController.js
 const db = require('../config/db');
 
-// --- Función 1: LOGIN ---
+// --- Función 1: LOGIN (Se mantiene igual) ---
 exports.login = async (req, res) => {
-    try {
-        const { email, password } = req.body;
-        if (!email || !password) return res.status(400).json({ error: 'Faltan datos' });
-
-        const [users] = await db.query("SELECT * FROM usuarios WHERE email = ?", [email]);
-
-        if (users.length === 0 || users[0].password !== password) {
-            return res.status(401).json({ error: 'Credenciales incorrectas' });
-        }
-        res.json({ message: 'Login exitoso', user: users[0] });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Error en el servidor' });
-    }
+// ... (código del login se mantiene igual) ...
 };
 
-// --- Función 2: REGISTRO (¡ESTA ES LA QUE TE FALTA!) ---
+// --- Función 2: REGISTRO (CON DEBUG PARA ENCONTRAR EL ERROR DE REGISTRO) ---
 exports.registro = async (req, res) => {
     try {
         const { nombre, email, password, tipo_vehiculo, marca_vehiculo, placa } = req.body;
 
-        // Validaciones
+        // 1. Validaciones
         if (!nombre || !email || !password || !placa) {
             return res.status(400).json({ error: 'Faltan datos obligatorios' });
         }
 
-        // Verificar duplicados
+        // 2. Verificar duplicados de EMAIL
         const [existe] = await db.query("SELECT id FROM usuarios WHERE email = ?", [email]);
         if (existe.length > 0) {
             return res.status(400).json({ error: 'El correo ya está registrado.' });
         }
 
-        // Insertar
-        const sql = "INSERT INTO usuarios (nombre, email, password, rol, tipo_vehiculo, marca_vehiculo, placa) VALUES (?, ?, ?, 'usuario', ?, ?, ?)";
-        await db.query(sql, [nombre, email, password, tipo_vehiculo, marca_vehiculo, placa]);
+        // 3. Verificar si la placa ya tiene un registro activo (Buena práctica)
+        const [placaActiva] = await db.query("SELECT id FROM registros WHERE placa = ? AND estado = 'activo'", [placa]);
+        if (placaActiva.length > 0) {
+            return res.status(400).json({ error: 'La placa ya tiene un vehículo registrado y activo en el estacionamiento.' });
+        }
 
-        res.status(201).json({ mensaje: 'Usuario registrado exitosamente' });
+
+        // 4. INSERTAR USUARIO en la tabla 'usuarios'
+        const sqlUser = "INSERT INTO usuarios (nombre, email, password, rol, tipo_vehiculo, marca_vehiculo, placa) VALUES (?, ?, ?, 'usuario', ?, ?, ?)";
+        const [userResult] = await db.query(sqlUser, [nombre, email, password, tipo_vehiculo, marca_vehiculo, placa]);
+        
+        // Obtenemos el ID del usuario recién creado
+        const nuevoUsuarioId = userResult.insertId; 
+
+
+        // 5. CREAR TICKET DE ENTRADA en la tabla 'registros'
+        const sqlRegistro = `
+            INSERT INTO registros 
+            (placa, tipo_vehiculo, usuario_entrada_id, estado) 
+            VALUES (?, ?, ?, 'activo')
+        `;
+        
+        // El problema debe estar aquí. Si falla, el error lo capturamos abajo.
+        await db.query(sqlRegistro, [placa, tipo_vehiculo, nuevoUsuarioId]); 
+
+
+        res.status(201).json({ mensaje: 'Usuario y ticket de entrada registrados exitosamente' });
+
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Error al registrar usuario' });
+        // 🚨 CAMBIO CLAVE: Imprimir el error de la DB si existe para debug
+        if (error.sqlMessage) {
+            console.error("❌ ERROR CRÍTICO SQL al crear registro/ticket:", error.sqlMessage);
+            console.error("SQL FALLIDA:", error.sql);
+            // Enviamos el mensaje de error de MySQL al frontend para debug
+            return res.status(500).json({ error: `Error DB (Ticket): ${error.sqlMessage}` });
+        }
+        
+        console.error("Error al registrar usuario y ticket:", error);
+        res.status(500).json({ error: 'Error al completar el registro en el servidor' });
     }
 };

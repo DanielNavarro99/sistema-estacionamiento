@@ -11,6 +11,10 @@ CREATE TABLE usuarios (
     email VARCHAR(100) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
     rol ENUM('admin', 'usuario') DEFAULT 'usuario',
+    -- Agregamos las columnas aquí directamente para evitar errores:
+    tipo_vehiculo VARCHAR(50) DEFAULT NULL,
+    marca_vehiculo VARCHAR(50) DEFAULT NULL,
+    placa VARCHAR(20) DEFAULT NULL,
     fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -48,6 +52,7 @@ USE estacionamiento_db;
 INSERT INTO usuarios (nombre, email, password, rol)
 VALUES ('Usuario Prueba', 'prueb323a2@fefe.com', '123', 'usuario');
 -- Insertamos las Tarifas iniciales
+
 INSERT INTO tarifas (tipo_vehiculo, costo_por_hora) VALUES 
 ('Automovil', 20.00),
 ('Motocicleta', 10.00),

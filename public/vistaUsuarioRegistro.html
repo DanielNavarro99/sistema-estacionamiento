@@ -81,13 +81,16 @@
             };
 
             const divMensaje = document.getElementById('mensaje');
-            const btnSiguiente = document.getElementById('btnSiguiente'); // Referencia al nuevo botón
-            const btnRegistrar = document.getElementById('btnRegistrar'); // Referencia al botón registrar
+            const btnSiguiente = document.getElementById('btnSiguiente'); 
+            const btnRegistrar = document.getElementById('btnRegistrar'); 
 
-            divMensaje.innerHTML = "Enviando datos...";
+            // --- INICIO DE CARGA Y DESHABILITAR BOTÓN (Mejora) ---
+            divMensaje.innerHTML = `<div class="alert alert-info">⏳ Registrando...</div>`;
+            btnRegistrar.disabled = true;
+            btnRegistrar.innerHTML = 'Registrando...'; // Opcional, cambiar el texto del botón
+            // ----------------------------------------------------
 
             try {
-                // Asegúrate de que esta URL sea la correcta (localhost:3000)
                 const respuesta = await fetch('http://localhost:3000/api/auth/registro', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -103,21 +106,32 @@
                     // 1. Limpiamos el formulario
                     document.getElementById('formRegistro').reset(); 
                     
-                    // 2. Ocultamos el botón de registrar para que no se registre doble
+                    // 2. Ocultamos el botón de registrar y mostramos el de Siguiente
                     btnRegistrar.style.display = 'none';
-
-                    // 3. ¡MOSTRAMOS EL BOTÓN SIGUIENTE!
-                    btnSiguiente.classList.remove('d-none'); 
+                    btnSiguiente.classList.remove('d-none');
+                    
+                    // Opcional: Redirección automática después de un tiempo
+                    // setTimeout(() => {
+                    //     window.location.href = 'vistaUsuario2.html';
+                    // }, 1500); 
 
                 } else {
                     // CASO DE ERROR:
-                    divMensaje.innerHTML = `<div class="alert alert-danger">❌ ${resultado.error}</div>`;
-                    // Nos aseguramos de que el botón siguiente siga oculto
+                    divMensaje.innerHTML = `<div class="alert alert-danger">❌ ${resultado.error || 'Error de servidor desconocido.'}</div>`;
+                    
+                    // Mantenemos visible el botón Registrar y oculto Siguiente
                     btnSiguiente.classList.add('d-none');
+                    btnRegistrar.style.display = 'block';
+                    
                 }
             } catch (error) {
                 console.error(error);
-                divMensaje.innerHTML = `<div class="alert alert-danger">🔥 Error de conexión (Revisa consola)</div>`;
+                divMensaje.innerHTML = `<div class="alert alert-danger">🔥 Error de conexión. Verifica que el servidor Node esté activo.</div>`;
+            } finally {
+                // --- FIN DE CARGA ---
+                btnRegistrar.disabled = false;
+                btnRegistrar.innerHTML = 'Registrar Usuario'; // Devolver el texto original
+                // ---------------------
             }
         });
     </script>
